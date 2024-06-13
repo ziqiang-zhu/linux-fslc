@@ -101,6 +101,43 @@
 			"Mic Jack", "MICB",
 			"AMIC", "MICB";
 	};
+
+	heartbeat-led {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_leds>;
+
+		led-dso {
+			label = "led-dso";
+			gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+			default-state = "on";
+		};
+	};
+
+	beep {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "ziq,single-gpio";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_beep>;
+		single-gpio = <&gpio5 1 GPIO_ACTIVE_LOW>;
+		periodic-duration = <300>;
+		status = "okay";
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		autorepeat;
+
+		gpio-key0 {
+			label = "GPIO Key Enter";
+			linux,code = <KEY_ENTER>;
+			gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
+		};
+	};
 };
 
 &clks {
@@ -328,7 +365,7 @@
 &tsc {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_tsc>;
-	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
+	xnur-gpio = <&gpio1 9 GPIO_ACTIVE_LOW>;
 	measure-delay-time = <0xffff>;
 	pre-charge-time = <0xfff>;
 	status = "okay";
@@ -572,7 +609,7 @@
 		fsl,pins = <
 			MX6UL_PAD_GPIO1_IO01__GPIO1_IO01		0xb0
 			MX6UL_PAD_GPIO1_IO02__GPIO1_IO02		0xb0
-			MX6UL_PAD_GPIO1_IO03__GPIO1_IO03		0xb0
+			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09		0xb0
 			MX6UL_PAD_GPIO1_IO04__GPIO1_IO04		0xb0
 		>;
 	};
@@ -704,6 +741,18 @@
 	pinctrl_wdog: wdoggrp {
 		fsl,pins = <
 			MX6UL_PAD_LCD_RESET__WDOG1_WDOG_ANY    0x30b0
+		>;
+	};
+
+	pinctrl_leds: ledgrp {
+		fsl,pins = <
+			MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0x10B0
+		>;
+	};
+
+	pinctrl_beep: beepgrp {
+		fsl,pins = <
+			MX6UL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
 		>;
 	};
 };

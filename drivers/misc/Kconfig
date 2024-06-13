@@ -562,6 +562,12 @@ config TPS6594_PFSM
 	  This driver can also be built as a module.  If so, the module
 	  will be called tps6594-pfsm.
 
+config SINGLE_GPIO
+	bool "Single gpio device driver supported"
+	default y
+	help
+	  Single gpio device supported, private duration and on/off handle.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
