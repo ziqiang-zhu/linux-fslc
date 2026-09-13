@@ -2,6 +2,7 @@
 //
 // Copyright (C) 2015 Freescale Semiconductor, Inc.
 
+#include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/media/video-interfaces.h>
 
 / {
@@ -40,14 +41,17 @@
 		status = "okay";
 	};
 
+	/*
+	 * VSD_3V3 cannot be switched on this board: GPIO1_IO09 is wired to the
+	 * touch panel interrupt line (see the ft5426 node), so the SD1 supply is
+	 * always on.
+	 */
 	reg_sd1_vmmc: regulator-sd1-vmmc {
 		compatible = "regulator-fixed";
 		regulator-name = "VSD_3V3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
-		off-on-delay-us = <20000>;
-		enable-active-high;
+		regulator-always-on;
 	};
 
 	reg_peri_3v3: regulator-peri-3v3 {
@@ -190,6 +194,22 @@
 				remote-endpoint = <&csi1_ep>;
 			};
 		};
+	};
+
+	/* ATK7016 panel touch: FocalTech FT5426, register compatible with the
+	 * EDT FT5x06 family.
+	 */
+	ft5426: touchscreen@38 {
+		compatible = "edt,edt-ft5406";
+		reg = <0x38>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_tsc &pinctrl_tsc_reset>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
+		touchscreen-size-x = <1024>;
+		touchscreen-size-y = <600>;
+		status = "okay";
 	};
 };
 
@@ -361,13 +381,12 @@
 	status = "okay";
 };
 
+/* The panel carries an I2C capacitive touch controller (FT5426), so the SoC
+ * TSC is unused here; its EVK pin group would also clash with the panel INT
+ * line (GPIO1_IO09) used by the ft5426 node.
+ */
 &tsc {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_tsc>;
-	xnur-gpio = <&gpio1 9 GPIO_ACTIVE_LOW>;
-	measure-delay-time = <0xffff>;
-	pre-charge-time = <0xfff>;
-	status = "okay";
+	status = "disabled";
 };
 
 &uart1 {
@@ -604,10 +623,7 @@
 
 	pinctrl_tsc: tscgrp {
 		fsl,pins = <
-			MX6UL_PAD_GPIO1_IO01__GPIO1_IO01		0xb0
-			MX6UL_PAD_GPIO1_IO02__GPIO1_IO02		0xb0
-			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09		0xb0
-			MX6UL_PAD_GPIO1_IO04__GPIO1_IO04		0xb0
+			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09		0xF080	/* CTP INT */
 		>;
 	};
 
@@ -652,7 +668,6 @@
 			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 	0x17059
 			MX6UL_PAD_UART1_RTS_B__GPIO1_IO19       0x17059 /* SD1 CD */
 			MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 /* SD1 VSELECT */
-			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
 		>;
 	};
 
@@ -750,6 +765,17 @@
 	pinctrl_beep: beepgrp {
 		fsl,pins = <
 			MX6UL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
+		>;
+	};
+};
+
+/* The touch reset line lives on an SNVS pad, configured through iomuxc_snvs
+ * (a separate register block from iomuxc).
+ */
+&iomuxc_snvs {
+	pinctrl_tsc_reset: tsc_reset {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09	0x10B0	/* CTP RST */
 		>;
 	};
 };
