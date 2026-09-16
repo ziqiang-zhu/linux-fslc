@@ -207,8 +207,18 @@
 		interrupt-parent = <&gpio1>;
 		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
 		reset-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
-		touchscreen-size-x = <1024>;
-		touchscreen-size-y = <600>;
+		/*
+		 * The FT5426 is a "26" series chip, which sends the Y coordinate
+		 * first, but edt-ft5x06.c applies the x/y swap only for the EV_FT
+		 * variant detected through register 0xA8 — ours reads 0x82 and is
+		 * reported as "generic ft5x06 (82)", so the swap is compensated
+		 * here. swapped-x-y swaps the values back; the sizes keep the
+		 * driver's raw field order (y first, x second) so that after the
+		 * swap the declared 1024x600 ranges end up on the right axes.
+		 */
+		touchscreen-size-x = <600>;
+		touchscreen-size-y = <1024>;
+		touchscreen-swapped-x-y;
 		status = "okay";
 	};
 };
